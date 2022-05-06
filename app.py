@@ -2,8 +2,6 @@ from flask import Flask, jsonify, request, redirect, make_response
 from flask_pymongo import PyMongo
 import requests
 
-from bson.objectid import ObjectId
-
 
 app = Flask(__name__)
 
@@ -20,34 +18,42 @@ def testServer():
 @app.route('/getFilms')
 def getFilms():
     films = db_operations.find()
-    output = [{'film_name' : film['name']} for film in films]
-    return jsonify(output)
+    allFilms = [{'film_name' : film['name']} for film in films]
+    if allFilms:
+        return jsonify(allFilms)
+    else:
+        return None
 
 
 @app.route('/postFilm/<filmName>')
 def postFilm(filmName):
     new_film = {'name' : filmName, 'image' : "no image", "video" : "no video", "category" : "test", "type:" : "test"}
-    newFilmId = db_operations.insert_one(new_film).inserted_id
-    newFilm = db_operations.find_one({"_id": newFilmId})
-    return jsonify(new_film["name"])
-
-@app.route('/deleteFilm/<idFilm>')
-def deleteFilm(idFilm):
-    print(idFilm)
-    db_operations.delete_one({"_id": ObjectId(idFilm)})
-    filmDeleted = db_operations.find_one({"_id": idFilm})
-    if filmDeleted: 
-        return make_response("erreur", 200)
+    newFilmId = db_operations.insert_one(new_film)
+    newFilm = db_operations.find_one({"name": filmName})
+    if newFilm:
+        return jsonify({"name": newFilm["name"]})
     else:
-        return make_response("deleted", 404)
+        return jsonify({"name": newFilm["error"]})
+
+@app.route('/deleteFilm/<movieName>')
+def deleteFilm(movieName):
+    db_operations.delete_one({"name": movieName})
+    filmDeleted = db_operations.find_one({"name": movieName})
+    if filmDeleted: 
+        return make_response("", 200)
+    else:
+        return make_response("", 404)
 
 @app.route('/updateFilm/<filmName>/<newFilmName>')
 def updateFilm(filmName, newFilmName):
     filmToUpdate = {"$set": {'name' : newFilmName}}
     filmToUpdateItem = {'name' : filmName}
     db_operations.update_one(filmToUpdateItem, filmToUpdate)
-    result = {'result' : 'Updated successfully'}
-    return result
+    newFilm = db_operations.find_one({"name": newFilmName})
+    if newFilm:
+        return jsonify({"name": newFilm["name"]})
+    else:
+        return jsonify({"name": newFilm["error"]})
 
 
 if __name__ == '__main__':

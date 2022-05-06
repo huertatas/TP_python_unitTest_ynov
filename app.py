@@ -1,6 +1,9 @@
-from flask import Flask, jsonify, request, redirect
+from flask import Flask, jsonify, request, redirect, make_response
 from flask_pymongo import PyMongo
 import requests
+
+from bson.objectid import ObjectId
+
 
 app = Flask(__name__)
 
@@ -28,12 +31,15 @@ def postFilm(filmName):
     newFilm = db_operations.find_one({"_id": newFilmId})
     return jsonify(new_film["name"])
 
-@app.route('/deleteFilm/<filmName>')
-def deleteFilm(filmName):
-    filmToDelete = {'name' : filmName}
-    db_operations.delete_one(filmToDelete)
-    result = {'result' : 'Deleted successfully'}
-    return result
+@app.route('/deleteFilm/<idFilm>')
+def deleteFilm(idFilm):
+    print(idFilm)
+    db_operations.delete_one({"_id": ObjectId(idFilm)})
+    filmDeleted = db_operations.find_one({"_id": idFilm})
+    if filmDeleted: 
+        return make_response("erreur", 200)
+    else:
+        return make_response("deleted", 404)
 
 @app.route('/updateFilm/<filmName>/<newFilmName>')
 def updateFilm(filmName, newFilmName):

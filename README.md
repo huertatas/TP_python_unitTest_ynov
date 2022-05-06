@@ -8,5 +8,5 @@ Flask-RESTful provides the building blocks for creating a great REST API.
 
 ## User Guide
 
-You'll find the user guide and all documentation [here](https://flask-restful.readthedocs.io/)
+le CRUD se trouve dans app.py et le test dans test.py
 
